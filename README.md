@@ -1,7 +1,4 @@
-
-
-
-# In this project I created an NFT Marketplace with these functionalities:
+# In this project I created an NFT Marketplace with these functionalities (The Graph Edition):
 1. Home Page:
     1. Shows recently listed NFTs
         1. If you own the NFT, you can update the listing

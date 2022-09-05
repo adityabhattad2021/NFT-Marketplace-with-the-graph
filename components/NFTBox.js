@@ -36,6 +36,7 @@ export default function NFTBox({
 	const [tokenDescription, setTokenDescription] = useState("");
 	const [showModal, setShowModal] = useState(false)
 	
+	console.log(nftAddress);
 
 	const { runContractFunction: getTokenURIForImg } = useWeb3Contract({
 		abi: basicNFTABI,

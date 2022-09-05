@@ -75,6 +75,7 @@ export default function SellNFT() {
 
 	async function handleListSuccess(transectionResponse) {
 		await transectionResponse.wait(1)
+		console.log("Transection Succesfull, Listed NFT to the market place");
 		dispatch({
 			type: "success",
 			message: "New Listed",
