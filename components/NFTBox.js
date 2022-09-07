@@ -3,7 +3,7 @@ import { useMoralis, useWeb3Contract } from "react-moralis";
 import nftMarketplaceABI from "../constants/NFTMarketplace.json";
 import basicNFTABI from "../constants/BasicNFT.json";
 import Image from "next/image";
-import { Card,useNotification } from "web3uikit";
+import { Button, Card, useNotification } from "web3uikit";
 import { ethers } from "ethers";
 import UpdateListingModal from "./UpdateListingModal";
 
@@ -29,14 +29,14 @@ export default function NFTBox({
 	marketPlaceAddress,
 	seller,
 }) {
-	const dispatch = useNotification()
+	const dispatch = useNotification();
 	const { isWeb3Enabled, account } = useMoralis();
 	const [imageURI, setImageURI] = useState("");
 	const [tokenName, setTokenName] = useState("");
 	const [tokenDescription, setTokenDescription] = useState("");
-	const [showModal, setShowModal] = useState(false)
-	
-	console.log(nftAddress);
+	const [showModal, setShowModal] = useState(false);
+
+	// console.log(nftAddress);
 
 	const { runContractFunction: getTokenURIForImg } = useWeb3Contract({
 		abi: basicNFTABI,
@@ -47,7 +47,6 @@ export default function NFTBox({
 		},
 	});
 
-
 	const { runContractFunction: buyTheNFT } = useWeb3Contract({
 		abi: nftMarketplaceABI,
 		contractAddress: marketPlaceAddress,
@@ -55,11 +54,22 @@ export default function NFTBox({
 		msgValue: price,
 		params: {
 			nftAddress,
+			tokenId,
+		},
+	});
+
+
+	const { runContractFunction: cancelNFTListing } = useWeb3Contract({
+		abi: nftMarketplaceABI,
+		contractAddress: marketPlaceAddress,
+		functionName: "cancelListing",
+		onSuccess:handleCancelNFTSuccess,
+		params: {
+			nftAddress,
 			tokenId
 		}
 	})
 
-	
 	const isOwnedByUser = seller === account || seller === undefined;
 	const formattedSeller = isOwnedByUser ? "you" : seller;
 	const truncatedSeller = truncateString(formattedSeller, 15);
@@ -73,8 +83,10 @@ export default function NFTBox({
 					"ipfs://",
 					"https://ipfs.io/ipfs/"
 				);
-				const tokenURIResponse = await (await fetch(requestURL)).json();
+				console.log(`The request URI is ${requestURL}`);
+				const tokenURIResponse = (await (await fetch(requestURL)).json());
 				const imageURL = tokenURIResponse.image;
+				console.log(`The image URI is ${imageURI}`);
 				const imageURIURL = imageURL.replace(
 					"ipfs://",
 					"https://ipfs.io/ipfs/"
@@ -84,33 +96,51 @@ export default function NFTBox({
 				setTokenDescription(tokenURIResponse.description);
 			}
 		} catch (error) {
+			setImageURI("")
 			console.log(error);
 			console.log("There was some error");
 		}
 	}
 
+	async function handleUpdateButton() {
+		 setShowModal(true)	
+	}
 
-	async function handleCardClick() {
-		isOwnedByUser ? setShowModal(true) : await buyTheNFT({
-			onError: ((error) => { console.log(error); }),
-			onSuccess:handleBuyItemSuccess
+	async function handleBuyButton() {
+		console.log("btn Clicked");
+		await buyTheNFT({
+			onError: (error) => {
+				console.log(error);
+			},
+			onSuccess: handleBuyItemSuccess,
+	  });
+	}
+
+	async function handleCancelListing() {
+		await cancelNFTListing()
+	}
+
+	async function handleCancelNFTSuccess(transectionResponse) {
+		await transectionResponse.wait(1)
+		dispatch({
+			type: "success",
+			message: "Listing Cancelled",
+			title: "Listing Cancelled Successfully",
+			position: "topR",
 		});
 	}
 
-
-	
 	function handleBuyItemSuccess() {
 		dispatch({
 			type: "success",
 			message: "Item Bought",
 			title: "Item Bought",
-			position:"topR"
-		})
+			position: "topR",
+		});
 	}
-	
 
 	function hideModal() {
-		setShowModal(false)
+		setShowModal(false);
 	}
 
 	useEffect(() => {
@@ -125,15 +155,20 @@ export default function NFTBox({
 		<div className="p-8">
 			<div>
 				{imageURI ? (
-                    <div>
+					<div>
 						<UpdateListingModal
 							marketPlaceAddress={marketPlaceAddress}
 							tokenId={tokenId}
 							nftAddress={nftAddress}
 							isVisible={showModal}
 							onClose={hideModal}
-                        />
-						<Card title={tokenName} description={tokenDescription} onClick={handleCardClick}>
+						/>
+					
+						<Card
+							title={tokenName}
+							description={tokenDescription}
+							// onClick={!isOwnedByUser ? handleCardClick : undefined}
+						>
 							<div className="p-2">
 								<div className="flex flex-col items-end gap-2">
 									<div>#{tokenId}</div>
@@ -147,6 +182,7 @@ export default function NFTBox({
 											height="200"
 											width="200"
 										/>
+										
 										<div className="font-bold">
 											{ethers.utils.formatUnits(
 												price,
@@ -155,6 +191,23 @@ export default function NFTBox({
 											ETH
 										</div>
 									</div>
+									{isOwnedByUser ?
+										<div className="flex flex-row">
+											<div className="p-3">
+												<Button
+													text="Cancel Listing"
+													onClick={handleCancelListing}
+												/>
+											</div >
+											<div className="p-3">
+												<Button text="Update Price" onClick={handleUpdateButton}/>
+											</div>
+										</div>
+										:
+										<div className="w-full flex justify-center">
+											<Button text="Buy" onClick={handleBuyButton}/>
+										</div>
+									}
 								</div>
 							</div>
 						</Card>
