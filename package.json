@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "moralis:sync": "moralis-admin-cli connect-local-devchain --chain hardhat --moralisSubdomain wne9x835mp86.usemoralis.com --frpcPath ./frp/frpc.exe",
-    "moralis:cloud": "moralis-admin-cli watch-cloud-folder --moralisSubdomain wne9x835mp86.usemoralis.com --autoSave 1 --moralisCloudfolder ./cloudFunctions"
+    "export": "next export"
   },
   "dependencies": {
     "ethers": "^5.6.9",
